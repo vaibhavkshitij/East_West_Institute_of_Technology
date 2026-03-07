@@ -2,13 +2,14 @@ import streamlit as st
 import tempfile
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))  
-from backend.main import answer_query, ingest_docs, reset_chain_cache
 
-# Page Config
-st.set_page_config(page_title="VTU Campus Assistant", page_icon="🎓")
-st.title("🎓 Interactive Campus Info Agent")
-st.markdown("Ask me about college rules, faculty, or event locations!")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from backend.main import answer_query, ingest_docs, reset_chain_cache, index_exists
+
+st.set_page_config(page_title="EWIT Campus Assistant", page_icon="🎓", layout="centered")
+
+st.title("🎓 EWIT Campus Assistant")
+st.caption("Powered by Groq (free) + LLaMA3 · Ask anything about campus!")
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -16,39 +17,53 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload campus PDF", type=["pdf"])
 
     if uploaded_file:
-        if st.button("📥 Ingest Document"):
-            with st.spinner("Processing PDF..."):
+        if st.button("📥 Ingest Document", use_container_width=True):
+            with st.spinner("Embedding document... (first time may take ~30s)"):
                 try:
-                    # Save upload to a temp file and ingest
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                         tmp.write(uploaded_file.read())
                         tmp_path = tmp.name
-
-                    ingest_docs(tmp_path)
-                    os.unlink(tmp_path)          # clean up temp file
-                    reset_chain_cache()          # force chain rebuild with new index
-                    st.success("✅ Document ingested! You can now ask questions.")
+                    count = ingest_docs(tmp_path)
+                    os.unlink(tmp_path)
+                    reset_chain_cache()
+                    st.success(f"✅ Ingested {count} chunks!")
                 except Exception as e:
                     st.error(f"Ingestion failed: {e}")
 
     st.divider()
-    st.header("⚡ Quick Access")
-    if st.button("Exam Cell Location"):
-        st.info("The Exam Cell is located in the Admin Block, Ground Floor.")
-    if st.button("Hostel Rules"):
-        st.warning("In-time for hostels is 9:00 PM.")
 
-# ── Chat Interface ────────────────────────────────────────────────────────────
+    if index_exists():
+        st.success("✅ Knowledge base loaded")
+    else:
+        st.warning("⚠️ No knowledge base yet.\nUpload a PDF above.")
+
+    st.divider()
+    st.header("⚡ Quick Questions")
+    quick = [
+        "Where is the exam cell?",
+        "What are hostel timings?",
+        "How do I join a club?",
+        "Who is the principal?",
+    ]
+    for q in quick:
+        if st.button(q, use_container_width=True):
+            st.session_state.pending_question = q
+
+# ── Chat ──────────────────────────────────────────────────────────────────────
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Render existing chat history
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-# Handle new user input
-if prompt := st.chat_input("How do I join the drama club?"):
+# Handle quick-question button clicks
+if "pending_question" in st.session_state:
+    prompt = st.session_state.pop("pending_question")
+else:
+    prompt = st.chat_input("Ask about campus rules, events, faculty...")
+
+if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -56,14 +71,11 @@ if prompt := st.chat_input("How do I join the drama club?"):
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                response = answer_query(prompt)
-            except FileNotFoundError:
-                response = (
-                    "⚠️ No document has been ingested yet. "
-                    "Please upload a campus PDF using the sidebar first."
-                )
+                if not index_exists():
+                    response = "⚠️ Please upload and ingest a campus PDF first using the sidebar."
+                else:
+                    response = answer_query(prompt)
             except Exception as e:
-                response = f"❌ Something went wrong: {e}"
-
+                response = f"❌ Error: {e}"
         st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})

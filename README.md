@@ -8,8 +8,7 @@ This AI-powered campus assistant is designed for students and visitors of the Ea
 
 🎥 Project Prototype
 
-Demo Video Link: [INSERT YOUR YOUTUBE/DRIVE LINK HERE] 
-+1
+Demo Video Link: https://drive.google.com/file/d/15ls1YyZNQYTZQp1SZY-9Qw1x8F67sSil/view?usp=sharing
 
 
 
@@ -27,7 +26,7 @@ Environment Setup: Configured Python environment with LangChain, Streamlit, and 
 Data Ingestion: Implemented PyPDFLoader to process the EWIT Student Handbook.
 
 
-Core Logic: Built a RAG (Retrieval-Augmented Generation) pipeline using Gemini 1.5 Flash and Google Generative AI Embeddings.
+Core Logic: Built a RAG (Retrieval-Augmented Generation) pipeline using Groq (LLaMA 3.1 8B Instant) and HuggingFace Embeddings (all-MiniLM-L6-v2) running locally.
 +1
 
 
@@ -58,10 +57,13 @@ Frontend: Streamlit
 Backend: Python + LangChain 
 
 
-LLM: Google Gemini 1.5 Flash 
+LLM: Groq - LLaMA 3.1 8B Instant (Free, no billing required) 
+
+
+Embeddings: HuggingFace all-MiniLM-L6-v2 (runs locally, no API key needed) 
 
 
 Vector Database: FAISS 
 
 
-APIs: Google Generative AI API
+APIs: Groq API (free tier)
