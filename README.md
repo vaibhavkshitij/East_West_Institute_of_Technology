@@ -8,7 +8,7 @@ This AI-powered campus assistant is designed for students and visitors of the Ea
 
 🎥 Project Prototype
 
-Demo Video Link: https://drive.google.com/file/d/15ls1YyZNQYTZQp1SZY-9Qw1x8F67sSil/view?usp=sharing
+Demo Video Link: https://drive.google.com/file/d/1T7p58c-04a8OqiYJmUpy_5AD5XLp2rJU/view?usp=drive_link
 
 
 
